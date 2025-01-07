@@ -71,7 +71,7 @@
     \begin{picture}(0,0)
       \put(7.3,1.5){\includegraphics[height=0.9cm,width=6cm]{nuaa.png}}
     \end{picture}}
-  \fancyhead[R]{\makebox[6.7cm]{\sihao 毕业设计（论文）报告纸}}
+  \fancyhead[R]{\makebox[6.7cm]\raggedright{\sihao 课程论文}}
   \fancyfoot[R]{\footnotesize{-\ \thepage\ -}}
   \renewcommand{\headrulewidth}{0.7pt}
   \renewcommand{\footrulewidth}{0.7pt}

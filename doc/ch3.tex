@@ -1,0 +1,64 @@
+PnP问题是知道3D-2D对应点求解相机位姿，而ICP问题则是知道3D-3D对应点求解相机位姿。
+
+在使用雷达或者深度相机时，我们可以获得视角的深度信息，这样如果知道固定的3D点，
+那么我们就能得到3D-3D对应点。
+
+\section{SVD方法}
+假设我们有一组匹配好的3D点：
+\begin{center}
+$P = {p_1, p_2,..., p_n} , \quad P' = {p'_1, p'_2,..., p'_n}$
+\end{center}
+我们要找到一个欧氏变换$R,t$,使得
+\begin{center}
+$\forall i, \quad p_i = R p'_i + t$
+\end{center}
+之后就可以定义第i点的误差项：
+
+\begin{equation}
+    e_i = p_i - (R p'_i + t)
+\end{equation}
+建立最小二乘问题，使得误差的平方和达到极小的$R,t$:
+\begin{equation}
+\min \limits_{R,t} \frac{1}{2} \sum_{i=1}^n ||p_i - (R p'_i + t)||_2^2
+\end{equation}
+
+下面来推导它的求解方法。首先，定义两组点的质心：
+\begin{equation}
+    p = \frac{1}{n} \sum_{i=1}^n p_i, \quad p' = \frac{1}{n} \sum_{i=1}^n p'_i.
+\end{equation}
+之后，展开并化简误差项:
+\[
+\begin{split}
+    & \frac{1}{2} \sum_{i=1}^{n} || p_i - (R p'_i + t) ||^2 \\
+    &= \frac{1}{2} \sum_{i=1}^{n} || p_i - R p'_i - t + p - R p' + p - R p' ||^2 \\
+    &= \frac{1}{2} \sum_{i=1}^{n} || (p_i - p - R(p'_i - p')) + (p - R p' - t) ||^2 \\
+    &= \frac{1}{2} \sum_{i=1}^{n} || p_i - p - R(p'_i - p') ||^2 + || p - R p' - t ||^2 +  2 (p - R p')^T (p_i - p - R(p'_i - p'))
+\end{split}
+\]
+注意到交叉线项部分$(p_i - p - R(p'_i - p') )$求和为零，我们可以把优化目标函数化简为：
+\begin{equation}
+    \min \limits_{R,t} \frac{1}{2} \sum_{i=1}^n || p_i - p - R(p'_i - p') ||^2 + || p - R p' - t ||^2
+\end{equation}
+发现左边之和旋转矩阵R有关，而右边同时含有R和t，但之和质心有关。我们只要获得了R，令第二项为零就能得到t。
+于是优化的过程为：
+\begin{center}
+    \begin{tabular}{l l}
+        \hline
+        步骤 & 操作 \\
+        \hline
+        1.计算每个点去质心坐标 & $q_i = p_i - p , q'_i = p'_i - p'$ \\
+        2.建立以下优化问题计算R & $R^* = arg \min \limits_{R} \frac{1}{2} \sum_{i=1}^n ||q_i - Rq'_i||^2$ \\
+        3.从R计算t & $t = p - R p'$ \\
+        \hline
+    \end{tabular}
+\end{center}
+这个过程中的优化问题R的误差项展开可得
+\begin{equation}
+    \frac{1}{2} \sum_{i=1}^n (q_i^T q_i + q^{'T}_i R^T R q_i - 2 q_i^T R q'_i)
+\end{equation}
+因为第一项和R无关，第二项$R^T R = I$，亦与R无关，所以优化问题可以简化为：
+\begin{equation}
+    \sum_{i=1}^n -q_i^T R q'_i = \sum_{i=1}^n - tr(R q'_i q_i^T) = - tr(R \sum_{i=1}^n q'_i q_i^T)
+\end{equation}
+
+计算这个最优问题即可解出答案。
